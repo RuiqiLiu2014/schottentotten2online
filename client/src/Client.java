@@ -17,11 +17,16 @@ public class Client {
             }
             line = line.replace("\\n", "\n");
             if (line.startsWith("GET_INPUT")) {
+                while (System.in.available() > 0) {
+                    System.in.read();
+                }
                 System.out.print(line.substring("GET_INPUT".length()));
                 out.println(scan.nextLine());
             } else if (line.startsWith("GAME_OVER")) {
-                System.out.println(line.substring("GAME_OVER".length()));
+                System.out.print(line.substring("GAME_OVER".length()));
                 break;
+            } else if (line.startsWith("NO_LN")){
+                System.out.print(line.substring("NO_LN".length()));
             } else {
                 System.out.println(line);
             }

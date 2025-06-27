@@ -26,6 +26,8 @@ public class Attacker extends Player {
     }
 
     private Card chooseCard() throws IOException {
+        clearInput();
+        toOpponent("Opponent is thinking...");
         display("Which card (r for retreat)? ", "GET_INPUT");
         String c = input.readLine();
         if (c.equalsIgnoreCase("r")) {
@@ -36,6 +38,8 @@ public class Attacker extends Player {
         if (!Card.isValid(c)) {
             displayln("invalid move");
             displayln("your opponent smacks you");
+            toOpponent("your opponent attempted an invalid move");
+            toOpponent("you smack them");
             return null;
         }
 
@@ -43,6 +47,8 @@ public class Attacker extends Player {
         if (!hand.contains(card)) {
             displayln("you don't have that card");
             displayln("you clearly need glasses");
+            toOpponent("your opponent tries to play a card they don't have");
+            toOpponent("take them to get glasses after the game");
             return null;
         }
 

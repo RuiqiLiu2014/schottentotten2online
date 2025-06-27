@@ -14,7 +14,6 @@ public abstract class Player {
     }
 
     public void takeTurn() throws IOException {
-        toOpponent("opponent is thinking");
         boolean played = playCard();
         while (!played) {
             displayHand();
@@ -23,6 +22,7 @@ public abstract class Player {
     }
 
     protected int chooseWall() throws IOException {
+        clearInput();
         display("Which wall (0 to cancel)? ", "GET_INPUT");
         String w = input.readLine();
         if (!isInteger(w)) {
@@ -34,6 +34,7 @@ public abstract class Player {
         int wall = Integer.parseInt(w);
         if (wall == 0) {
             displayln("you have commitment issues");
+            toOpponent("your opponent has commitment issues");
             return 0;
         } else if (wall < 0 || wall > Constants.numWalls) {
             displayln("wall out of range");
@@ -97,11 +98,21 @@ public abstract class Player {
         }
     }
 
-    public void toOpponent(String message) {
+    public void toOpponent(String message, String prefix) {
         if (playerType == PlayerType.HOST) {
-            Display.toClient(message);
+            Display.toClient(message, prefix);
         } else {
-            Display.toHost(message);
+            Display.toHostln(message);
+        }
+    }
+
+    public void toOpponent(String message) {
+        toOpponent(message, "");
+    }
+
+    protected void clearInput() throws IOException {
+        while (input.ready()) {
+            input.readLine();
         }
     }
 }

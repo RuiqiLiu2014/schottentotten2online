@@ -3,13 +3,13 @@ import java.io.*;
 import java.net.*;
 
 public class Host {
-    public static boolean useEmojis = true;
+    public static boolean useEmojis = true; // change this to toggle emoji mode
 
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = new ServerSocket(12345);
-        System.out.println("Waiting for player to connect...");
+        System.out.println("waiting for opponent to connect");
         Socket socket = serverSocket.accept();
-        System.out.println("Player connected!");
+        System.out.println("connected");
 
         BufferedReader clientIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         PrintWriter clientOut = new PrintWriter(socket.getOutputStream(), true);
@@ -72,7 +72,7 @@ public class Host {
 
     private static String instructions() {
         String str = "\nWhen playing a card, type either the name, color, or copy paste emoji of the suit followed by the number (no space).\n";
-        str += "Single digit numbers must have a 0 in front of them\n";
+        str += "Single digit numbers must have a 0 in front of them.\n";
         str += "Suits: heart, diamond, star, clover, flower\n";
         str += "Colors: red, blue, yellow, green, pink\n";
         return str;

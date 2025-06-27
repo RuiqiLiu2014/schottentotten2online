@@ -29,17 +29,23 @@ public class Discard {
         return discard.contains(card);
     }
 
-    // CHANGE THIS
-    public void display() {
+    public String toString() {
+        StringBuilder str = new StringBuilder();
         List<Card> list = List.copyOf(discard);
         for (int i = 0; i < list.size() - 1; i++) {
-            System.out.print(list.get(i).toString() + " ");
+            str.append(list.get(i).toString()).append(" ");
             if (!list.get(i).getColor().equals(list.get(i + 1).getColor())) {
-                System.out.println();
+                str.append("\n");
             }
         }
         if (!list.isEmpty()) {
-            System.out.println(list.getLast());
+            str.append(list.getLast());
         }
+        str.append("\n");
+        return str.toString();
+    }
+
+    public boolean isEmpty() {
+        return discard.isEmpty();
     }
 }

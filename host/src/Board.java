@@ -44,18 +44,18 @@ public class Board {
             str.append(wall.toString()).append("\n");
         }
 
-        str.append("-".repeat((Constants.cardSpace().length() + 1) * Constants.longestWall()));
-        str.append("-".repeat(Constants.leftWalls[0].length() + Constants.longestWall() * 2));
+        str.append("-".repeat((Constants.cardSpace().length() + 1) * Constants.longestWall() + Constants.leftWalls[0].length() + Constants.longestWall() * 2));
         str.append("DISCARD");
-        str.append("-".repeat((Constants.cardSpace().length() + 1) * Constants.longestWall()));
-        str.append("-".repeat(Constants.rightWalls[0].length() + Constants.longestWall() * 2));
-        discard.display();
+        str.append("-".repeat((Constants.cardSpace().length() + 1) * Constants.longestWall() + Constants.rightWalls[0].length() + Constants.longestWall() * 2));
         str.append("\n");
-        str.append("-".repeat((Constants.cardSpace().length() + 1) * Constants.longestWall()));
-        str.append("-".repeat(Constants.leftWalls[0].length() + Constants.longestWall() * 2));
+        if (discard.isEmpty()) {
+            str.append("\n");
+        } else {
+            str.append(discard.toString());
+        }
+        str.append("-".repeat(2 * (Constants.cardSpace().length() + 1) * Constants.longestWall()));
+        str.append("-".repeat(Constants.leftWalls[0].length() + Constants.rightWalls[0].length() + Constants.longestWall() * 4));
         str.append("-------");
-        str.append("-".repeat((Constants.cardSpace().length() + 1) * Constants.longestWall()));
-        str.append("-".repeat(Constants.rightWalls[0].length() + Constants.longestWall() * 2));
         return str.toString();
     }
 
@@ -79,8 +79,12 @@ public class Board {
     }
 
     public void retreat(int wall) {
-        discard.addAll(board[wall - 1].retreat());
-        Display.toBoth(toString());
+        List<Card> cards = board[wall - 1].retreat();
+        if (!cards.isEmpty()) {
+            discard.addAll(cards);
+            Display.toBothln(toString());
+            Display.toBothln("Attacker retreated from wall " + wall + ". What a coward.");
+        }
     }
 
     public boolean cauldron(int wall) {
@@ -88,12 +92,13 @@ public class Board {
         if (card != null) {
             discard.add(card);
             cauldronCount--;
-            Display.toBoth(toString());
-            System.out.print(cauldronCount + " cauldron");
+            Display.toBothln(toString());
+            String str = "Defender used cauldron on wall " + (wall - 1) + ". " + cauldronCount + " cauldron";
             if (cauldronCount != 1) {
-                System.out.print("s");
+                str += "s";
             }
-            System.out.println(" remaining");
+            str += " remaining.";
+            Display.toBothln(str);
             return true;
         }
         return false;
