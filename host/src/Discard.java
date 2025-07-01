@@ -4,13 +4,13 @@ import java.net.*;
 
 public class Discard {
     private static Discard instance;
-    private Set<Card> discard;
+    private final Set<Card> discard;
 
     private Discard() {
         discard = new TreeSet<>();
     }
 
-    public static Discard getInstance() {
+    public static synchronized Discard getInstance() {
         if (instance == null) {
             instance = new Discard();
         }

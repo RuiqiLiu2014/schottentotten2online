@@ -4,45 +4,32 @@ import java.net.*;
 
 public class Card implements Comparable<Card> {
     private final int value;
-    private final String color;
+    private final Color color;
 
-    public Card(String color, int value) {
+    public Card(Color color, int value) {
         this.value = value;
-        this.color = Constants.convert(color);
+        this.color = color;
     }
 
     public Card(String name) {
-        this.color = Constants.convert(name.substring(0, name.length() - 2));
+        this.color = Color.convert(name.substring(0, name.length() - 2));
         this.value = Integer.parseInt(name.substring(name.length() - 2));
     }
 
     public String toString() {
-        int index = Constants.colorIndex(color);
-        if (Host.useEmojis) {
-            if (value <= 9) {
-                return Constants.emojis.get(index) + "0" + value;
-            } else {
-                return Constants.emojis.get(index) + value;
-            }
-        } else {
-            if (value <= 9) {
-                return Constants.fruits.get(index) + "0" + value;
-            } else {
-                return Constants.fruits.get(index) + value;
-            }
-        }
+        return value <= 9 ? color.getSymbol() + "0" + value : color.getSymbol() + value;
     }
 
     public int getValue() {
         return value;
     }
 
-    public String getColor() {
+    public Color getColor() {
         return color;
     }
 
     public int compareTo(Card other) {
-        if (this.color.equals(other.color)) {
+        if (this.color == other.color) {
             return this.value - other.value;
         }
         return this.color.compareTo(other.color);
@@ -58,15 +45,21 @@ public class Card implements Comparable<Card> {
         }
     }
 
+    public int hashCode() {
+        return Objects.hash(value, color);
+    }
+
     public static boolean isValid(String name) {
         if (name.length() <= 2) {
             return false;
         }
-        int index = Constants.colorIndex(name.substring(0, name.length() - 2));
-        if (index == -1) {
+
+        Color color = Color.convert(name.substring(0, name.length() - 2));
+        if (color == null) {
             return false;
         }
+
         int value = Integer.parseInt(name.substring(name.length() - 2));
-        return value <= 11 && value >= 0;
+        return value >= 0 && value <= 11;
     }
 }

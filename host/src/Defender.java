@@ -21,7 +21,7 @@ public class Defender extends Player {
             return false;
         }
 
-        if (Board.getInstance().playCard(card, wall, false)) {
+        if (Board.getInstance().playCard(card, wall, false) == Played.SUCCEEDED) {
             hand.remove(card);
             return true;
         }

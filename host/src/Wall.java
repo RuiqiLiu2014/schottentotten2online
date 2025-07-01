@@ -1,25 +1,34 @@
 import java.util.*;
-import java.io.*;
-import java.net.*;
 
 public class Wall {
-    private int status;
-    private final int BROKEN = 2;
-    private final int DAMAGED = 1;
-    private final int INTACT = 0;
+    private Status status;
     private int length;
-    private int damagedLength;
-    private String pattern;
-    private String damagedPattern;
+    private final int damagedLength;
+    private WallPattern pattern;
+    private final WallPattern damagedPattern;
 
-    private List<Card> attackerCards;
-    private List<Card> defenderCards;
+    private final List<Card> attackerCards;
+    private final List<Card> defenderCards;
 
     private boolean attackerFinishedFirst;
     private final int wallNum;
 
-    public Wall(int length, int damagedLength, String pattern, String damagedPattern, int wallNum) {
-        status = INTACT;
+    private enum Status {
+        BROKEN("  ", "  "),
+        DAMAGED("| ", " |"),
+        INTACT("||", "||");
+
+        private final String leftSymbol;
+        private final String rightSymbol;
+
+        Status(String left, String right) {
+            leftSymbol = left;
+            rightSymbol = right;
+        }
+    }
+
+    public Wall(int length, int damagedLength, WallPattern pattern, WallPattern damagedPattern, int wallNum) {
+        status = Status.INTACT;
         this.length = length;
         this.damagedLength = damagedLength;
         this.pattern = pattern;
@@ -33,11 +42,11 @@ public class Wall {
     }
 
     public Set<Card> damage() {
-        if (status == DAMAGED) {
-            status = BROKEN;
+        if (status == Status.DAMAGED) {
+            status = Status.BROKEN;
             return new TreeSet<>();
         } else {
-            status = DAMAGED;
+            status = Status.DAMAGED;
             Set<Card> toDiscard = new TreeSet<>();
             toDiscard.addAll(attackerCards);
             toDiscard.addAll(defenderCards);
@@ -50,11 +59,11 @@ public class Wall {
     }
 
     public boolean isDamaged() {
-        return status == DAMAGED;
+        return status == Status.DAMAGED;
     }
 
     public boolean isBroken() {
-        return status == BROKEN;
+        return status == Status.BROKEN;
     }
 
     public List<Card> retreat() {
@@ -97,7 +106,7 @@ public class Wall {
         return maxStrength;
     }
 
-    public int playCard(Card card, boolean attacker) {
+    public Played playCard(Card card, boolean attacker) {
         List<Card> playingSide;
         List<Card> otherSide;
         if (attacker) {
@@ -109,8 +118,7 @@ public class Wall {
         }
 
         if (playingSide.size() == length) {
-            System.out.println("no more space");
-            return -1;
+            return Played.FAILED;
         }
 
         int value = card.getValue();
@@ -119,30 +127,31 @@ public class Wall {
             if (otherSide.contains(temp)) {
                 playingSide.remove(card);
                 otherSide.remove(temp);
-                return Constants.colors.indexOf(card.getColor()) + 1;
+                Discard.getInstance().add(card);
+                Discard.getInstance().add(temp);
             }
         }
         playingSide.add(card);
         attackerFinishedFirst = attackerCards.size() == length && defenderHasSpace();
-        return 0;
+        return Played.SUCCEEDED;
     }
 
     public String toString() {
         StringBuilder str = new StringBuilder();
-        for (int i = Constants.longestWall() - 1; i >= 0; i--) {
+        for (int i = Constants.longestWall - 1; i >= 0; i--) {
             if (i >= attackerCards.size()) {
-                str.append(Constants.cardSpace()).append(" ");
+                str.append(Constants.cardSpace).append(" ");
             } else {
                 str.append(attackerCards.get(i).toString()).append(" ");
             }
         }
-        str.append(Constants.leftWalls[status]).append(wallNum).append(Constants.rightWalls[status]).append(" ");
-        str.append("  ".repeat(Constants.longestWall() - length));
+        str.append(status.leftSymbol).append(wallNum).append(status.rightSymbol).append(" ");
+        str.append("  ".repeat(Constants.longestWall - length));
         for (int i = 0; i < length; i++) {
-            str.append("[").append(pattern).append("] ");
+            str.append("[").append(pattern.getSymbol()).append("] ");
         }
-        str.append("  ".repeat(Constants.longestWall() - length));
-        str.append(Constants.leftWalls[status]).append(wallNum).append(Constants.rightWalls[status]);
+        str.append("  ".repeat(Constants.longestWall - length));
+        str.append(status.leftSymbol).append(wallNum).append(status.rightSymbol);
 
         for (Card card : defenderCards) {
             str.append(" ").append(card.toString());
@@ -164,37 +173,37 @@ public class Wall {
         for (Card card : formation) {
             sum += card.getValue();
         }
-        int type = getPatternType(formation);
+        FormationType type = getFormationType(formation);
 
         switch (pattern) {
-            case Constants.PLUS -> {
-                return sum;
+            case WallPattern.PLUS -> {
+                type = FormationType.SUM;
             }
-            case Constants.MINUS -> {
-                return -sum;
+            case WallPattern.MINUS -> {
+                type = FormationType.SUM;
+                sum *= -1;
             }
-            case Constants.COLOR -> {
-                if (type == 3 || type == 1) {
-                    return sum;
-                } else {
-                    return type * 100 + sum;
+            case WallPattern.COLOR -> {
+                if (type == FormationType.SAME_STRENGTH || type == FormationType.RUN) {
+                    type = FormationType.SUM;
                 }
             }
-            case Constants.RUN -> {
-                if (type == 3 || type == 2) {
-                    return sum;
-                } else {
-                    return type * 100 + sum;
+            case WallPattern.RUN -> {
+                if (type == FormationType.SAME_STRENGTH || type == FormationType.COLOR) {
+                    type = FormationType.SUM;
                 }
             }
-            default -> {
-                return type * 100 + sum;
+            case WallPattern.EQUALS -> {
+                if (type == FormationType.COLOR_RUN || type == FormationType.COLOR || type == FormationType.RUN) {
+                    type = FormationType.SUM;
+                }
             }
         }
+        return type.getStrength() * 100 + sum;
     }
 
-    private int getPatternType(List<Card> formation) {
-        Set<String> colors = new TreeSet<>();
+    private FormationType getFormationType(List<Card> formation) {
+        Set<Color> colors = new TreeSet<>();
         List<Integer> values = new ArrayList<>();
         for (Card card : formation) {
             colors.add(card.getColor());
@@ -202,35 +211,24 @@ public class Wall {
         }
         Collections.sort(values);
 
-        boolean allSame = true;
-        int first = values.getFirst();
-        for (int i = 1; i < values.size(); i++) {
-            if (values.get(i) != first) {
-                allSame = false;
-                break;
-            }
-        }
-        if (allSame) {
-            return 3;
-        }
-
-        Set<Integer> diffs = new TreeSet<>();
+        Set<Integer> diffs = new HashSet<>();
         for (int i = 0; i < formation.size() - 1; i++) {
             diffs.add(values.get(i + 1) - values.get(i));
         }
 
         if (colors.size() == 1) {
-            if (diffs.size() == 1 && diffs.contains(1)) {
-                return 4;
-            } else {
-                return 2;
+            return diffs.size() == 1 && diffs.contains(1) ? FormationType.COLOR_RUN : FormationType.COLOR;
+        }
+
+        if (diffs.size() == 1) {
+            if (diffs.contains(0)) {
+                return FormationType.SAME_STRENGTH;
             }
-        } else {
-            if (diffs.size() == 1 && diffs.contains(1)) {
-                return 1;
+            if (diffs.contains(1)) {
+                return FormationType.RUN;
             }
         }
 
-        return 0;
+        return FormationType.SUM;
     }
 }

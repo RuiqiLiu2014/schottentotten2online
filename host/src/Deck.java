@@ -4,14 +4,14 @@ import java.net.*;
 
 public class Deck {
     private static Deck instance;
-    private Stack<Card> deck;
+    private final Stack<Card> deck;
 
     private Deck() {
         deck = new Stack<>();
-        deck.addAll(Constants.allCards());
+        deck.addAll(Constants.allCards);
     }
 
-    public static Deck getInstance() {
+    public static synchronized Deck getInstance() {
         if (instance == null) {
             instance = new Deck();
         }
@@ -32,7 +32,6 @@ public class Deck {
 
     public Card pop() {
         if (deck.isEmpty()) {
-            System.out.println("deck is empty");
             return null;
         }
         return deck.pop();

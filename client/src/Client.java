@@ -4,7 +4,7 @@ import java.net.*;
 
 public class Client {
     public static void main(String[] args) throws IOException {
-        Socket socket = new Socket("localhost", 12345); // Replace localhost with host IP
+        Socket socket = new Socket(args[0], Integer.parseInt(args[1])); // change
         System.out.println("connected");
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
@@ -31,5 +31,7 @@ public class Client {
                 System.out.println(line);
             }
         }
+
+        socket.close();
     }
 }

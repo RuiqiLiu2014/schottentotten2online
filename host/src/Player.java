@@ -7,6 +7,10 @@ public abstract class Player {
     protected PlayerType playerType;
     protected BufferedReader input;
 
+    public enum PlayerType {
+        HOST, CLIENT
+    }
+
     public Player(PlayerType type, BufferedReader input) {
         hand = new TreeSet<>();
         this.playerType = type;

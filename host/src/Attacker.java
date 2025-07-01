@@ -18,7 +18,7 @@ public class Attacker extends Player {
             return false;
         }
 
-        if (Board.getInstance().playCard(card, wall, true)) {
+        if (Board.getInstance().playCard(card, wall, true) == Played.SUCCEEDED) {
             hand.remove(card);
             return true;
         }
