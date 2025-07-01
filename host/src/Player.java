@@ -1,6 +1,5 @@
 import java.util.*;
 import java.io.*;
-import java.net.*;
 
 public abstract class Player {
     protected Set<Card> hand;
@@ -20,6 +19,8 @@ public abstract class Player {
     public void takeTurn() throws IOException {
         boolean played = playCard();
         while (!played) {
+            displayln("you are bad");
+            toOpponent("your opponent is being bad");
             displayHand();
             played = playCard();
         }

@@ -80,6 +80,7 @@ public class Host {
 
     private static boolean hostEmojiCheck() {
         Scanner scan = new Scanner(System.in);
+        Display.toClient("Checking host emojis");
         Display.toHostln("Here are the emojis used in the game:");
         Display.toHostln(Color.listOf(Color.ColorType.EMOJI));
         Display.toHost("Can you see them (y/n)? ");
@@ -95,6 +96,7 @@ public class Host {
     }
 
     private static boolean clientEmojiCheck(BufferedReader input) throws IOException {
+        Display.toHostln("Checking client emojis");
         Display.toClient("Here are the emojis used in the game:");
         Display.toClient(Color.listOf(Color.ColorType.EMOJI));
         Display.toClient("Can you see them (y/n)? ", "GET_INPUT");
@@ -127,18 +129,18 @@ public class Host {
     private static boolean displayWinner(Board board) {
         return switch(board.won()) {
             case Winner.ATTACKER -> {
-                Display.toBoth("Attacker wins", "GAME_OVER");
+                Display.toBoth("\nAttacker wins\n", "GAME_OVER");
                 yield true;
             }
             case Winner.DEFENDER -> {
-                Display.toBoth("Defender wins", "GAME_OVER");
+                Display.toBoth("\nDefender wins\n", "GAME_OVER");
                 yield true;
             }
             default -> false;
         };
     }
 
-    private static void displayHands(Player attacker, Player defender) {
+    public static void displayHands(Player attacker, Player defender) {
         attacker.displayHand();
         defender.displayHand();
     }

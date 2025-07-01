@@ -106,10 +106,10 @@ public class Wall {
         return maxStrength;
     }
 
-    public Played playCard(Card card, boolean attacker) {
+    public Played playCard(Card card, boolean isAttacker) {
         List<Card> playingSide;
         List<Card> otherSide;
-        if (attacker) {
+        if (isAttacker) {
             playingSide = attackerCards;
             otherSide = defenderCards;
         } else {
@@ -129,6 +129,7 @@ public class Wall {
                 otherSide.remove(temp);
                 Discard.getInstance().add(card);
                 Discard.getInstance().add(temp);
+                return Played.SUCCEEDED;
             }
         }
         playingSide.add(card);
