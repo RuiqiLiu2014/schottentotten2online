@@ -1,64 +1,68 @@
-import java.util.*;
 import java.io.*;
-import java.net.*;
 
 public class Attacker extends Player {
     public Attacker(PlayerType type, BufferedReader input) {
         super(type, input);
     }
 
-    public boolean playCard() throws IOException {
+    public Played playCard() throws IOException {
         Card card = chooseCard();
         if (card == null) {
-            return false;
+            return Played.FAILED;
+        } else if (card.isAction()) {
+            return Played.USED_ACTION;
         }
 
         int wall = chooseWall();
         if (wall == 0) {
-            return false;
+            return Played.FAILED;
         }
 
-        if (Board.getInstance().playCard(card, wall, true) == Played.SUCCEEDED) {
+        Played played = Table.getInstance().playCard(card, wall, true);
+
+        if (played == Played.SUCCEEDED) {
             hand.remove(card);
-            return true;
+            return Played.SUCCEEDED;
+        } else if (played == Played.NO_SPACE) {
+            displayln("No more space");
         }
-        return false;
+        return Played.FAILED;
     }
 
     private Card chooseCard() throws IOException {
         clearInput();
-        toOpponent("Opponent is thinking...");
         display("Which card (r for retreat)? ", "GET_INPUT");
         String c = input.readLine();
         if (c.equalsIgnoreCase("r")) {
-            retreat();
+            if (retreat()) {
+                return Card.ACTION;
+            }
             return null;
         }
 
         if (!Card.isValid(c)) {
-            displayln("invalid move");
-            displayln("your opponent smacks you");
-            toOpponent("your opponent attempted an invalid move");
-            toOpponent("you smack them");
+            displayln("Invalid card");
             return null;
         }
 
         Card card = new Card(c);
         if (!hand.contains(card)) {
-            displayln("you don't have that card");
-            displayln("you clearly need glasses");
-            toOpponent("your opponent tries to play a card they don't have");
-            toOpponent("take them to get glasses after the game");
+            displayln("You don't have that card");
             return null;
         }
 
         return card;
     }
 
-    private void retreat() throws IOException {
+    private boolean retreat() throws IOException {
         int wall = chooseWall();
         if (wall != 0) {
-            Board.getInstance().retreat(wall);
+            boolean retreated = Table.getInstance().retreat(wall);
+            if (!retreated) {
+                displayln("Nothing to retreat");
+            }
+            return retreated;
         }
+        return false;
     }
 }

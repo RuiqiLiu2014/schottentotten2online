@@ -1,3 +1,3 @@
 public enum Played {
-    FAILED, SUCCEEDED
+    FAILED, SUCCEEDED, NO_SPACE, USED_ACTION
 }

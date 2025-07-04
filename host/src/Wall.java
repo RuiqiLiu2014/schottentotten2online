@@ -3,8 +3,10 @@ import java.util.*;
 public class Wall {
     private Status status;
     private int length;
+    private final int intactLength;
     private final int damagedLength;
     private WallPattern pattern;
+    private final WallPattern intactPattern;
     private final WallPattern damagedPattern;
 
     private final List<Card> attackerCards;
@@ -25,20 +27,38 @@ public class Wall {
             leftSymbol = left;
             rightSymbol = right;
         }
+
+        public String getLeftSymbol() {
+            return leftSymbol;
+        }
+
+        public String getRightSymbol() {
+            return rightSymbol;
+        }
     }
 
-    public Wall(int length, int damagedLength, WallPattern pattern, WallPattern damagedPattern, int wallNum) {
+    public Wall(int intactLength, int damagedLength, WallPattern intactPattern, WallPattern damagedPattern, int wallNum) {
         status = Status.INTACT;
-        this.length = length;
+        this.intactLength = intactLength;
         this.damagedLength = damagedLength;
-        this.pattern = pattern;
+        this.intactPattern = intactPattern;
         this.damagedPattern = damagedPattern;
+        length = intactLength;
+        pattern = intactPattern;
 
         attackerCards = new ArrayList<>();
         defenderCards = new ArrayList<>();
 
         attackerFinishedFirst = false;
         this.wallNum = wallNum;
+    }
+
+    public int getLeftSymbolLength() {
+        return status.getLeftSymbol().length();
+    }
+
+    public int getRightSymbolLength() {
+        return status.getRightSymbol().length();
     }
 
     public Set<Card> damage() {
@@ -118,7 +138,7 @@ public class Wall {
         }
 
         if (playingSide.size() == length) {
-            return Played.FAILED;
+            return Played.NO_SPACE;
         }
 
         int value = card.getValue();
@@ -139,19 +159,19 @@ public class Wall {
 
     public String toString() {
         StringBuilder str = new StringBuilder();
-        for (int i = Constants.longestWall - 1; i >= 0; i--) {
+        for (int i = Constants.LONGEST_WALL - 1; i >= 0; i--) {
             if (i >= attackerCards.size()) {
-                str.append(Constants.cardSpace).append(" ");
+                str.append(Constants.CARD_SPACE).append(" ");
             } else {
                 str.append(attackerCards.get(i).toString()).append(" ");
             }
         }
         str.append(status.leftSymbol).append(wallNum).append(status.rightSymbol).append(" ");
-        str.append("  ".repeat(Constants.longestWall - length));
+        str.append("  ".repeat(Constants.LONGEST_WALL - length));
         for (int i = 0; i < length; i++) {
             str.append("[").append(pattern.getSymbol()).append("] ");
         }
-        str.append("  ".repeat(Constants.longestWall - length));
+        str.append("  ".repeat(Constants.LONGEST_WALL - length));
         str.append(status.leftSymbol).append(wallNum).append(status.rightSymbol);
 
         for (Card card : defenderCards) {
@@ -231,5 +251,13 @@ public class Wall {
         }
 
         return FormationType.SUM;
+    }
+
+    public void reset() {
+        attackerCards.clear();
+        defenderCards.clear();
+        status = Status.INTACT;
+        length = intactLength;
+        pattern = intactPattern;
     }
 }

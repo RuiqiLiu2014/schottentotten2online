@@ -48,4 +48,8 @@ public class Discard {
     public boolean isEmpty() {
         return discard.isEmpty();
     }
+
+    public void clear() {
+        discard.clear();
+    }
 }

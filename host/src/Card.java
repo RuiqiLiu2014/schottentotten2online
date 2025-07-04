@@ -1,10 +1,10 @@
 import java.util.*;
-import java.io.*;
-import java.net.*;
 
 public class Card implements Comparable<Card> {
     private final int value;
     private final Color color;
+
+    public static final Card ACTION = new Card(null, -1);
 
     public Card(Color color, int value) {
         this.value = value;
@@ -61,5 +61,9 @@ public class Card implements Comparable<Card> {
 
         int value = Integer.parseInt(name.substring(name.length() - 2));
         return value >= 0 && value <= 11;
+    }
+
+    public boolean isAction() {
+        return value == -1;
     }
 }

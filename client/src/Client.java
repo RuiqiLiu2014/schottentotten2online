@@ -5,7 +5,7 @@ import java.net.*;
 public class Client {
     public static void main(String[] args) throws IOException {
         Socket socket = new Socket(args[0], Integer.parseInt(args[1])); // change
-        System.out.println("connected");
+        System.out.println("connected\n");
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
         Scanner scan = new Scanner(System.in);
@@ -22,8 +22,8 @@ public class Client {
                 }
                 System.out.print(line.substring("GET_INPUT".length()));
                 out.println(scan.nextLine());
-            } else if (line.startsWith("GAME_OVER")) {
-                System.out.print(line.substring("GAME_OVER".length()));
+            } else if (line.startsWith("END_PROGRAM")) {
+                System.out.print(line.substring("END_PROGRAM".length()));
                 break;
             } else if (line.startsWith("NO_LN")){
                 System.out.print(line.substring("NO_LN".length()));

@@ -4,13 +4,14 @@ import java.net.*;
 
 public class Host {
     public static boolean useEmojis;
+    private static Player attacker;
+    private static Player defender;
 
     public static void main(String[] args) throws IOException {
         ServerSocket serverSocket = new ServerSocket(Integer.parseInt(args[0]));
-        Display.toHostln("waiting for opponent to connect");
+        Display.toHostln("waiting for client to connect");
         Socket socket = serverSocket.accept();
-        Display.toHostln("connected");
-
+        Display.toHostln("connected\n");
 
         BufferedReader clientIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         PrintWriter clientOut = new PrintWriter(socket.getOutputStream(), true);
@@ -18,59 +19,112 @@ public class Host {
         Display.setClientOut(clientOut); // consider 2 display objects
 
         useEmojis = emojiCheck(clientIn);
-        String role = chooseRole();
-        Player attacker;
-        Player defender;
-
         Display.toBothln(instructions());
-        if (role.equals("a")) {
-            attacker = new Attacker(Player.PlayerType.HOST, input);
-            defender = new Defender(Player.PlayerType.CLIENT, clientIn);
-            Display.toHostln("You are the ATTACKER.");
-            Display.toClient("You are the DEFENDER.");
-        } else {
-            attacker = new Attacker(Player.PlayerType.CLIENT, clientIn);
-            defender = new Defender(Player.PlayerType.HOST, input);
-            Display.toClient("You are the ATTACKER.");
-            Display.toHostln("You are the DEFENDER.");
+
+        Display.toClient("Host is choosing role");
+        Role hostRole = chooseRole();
+        boolean playAgain = runGame(clientIn, input, hostRole);
+        while (playAgain) {
+            Display.toClient("Host is choosing role");
+            hostRole = chooseRole(hostRole);
+            playAgain = runGame(clientIn, input, hostRole);
         }
 
-        Board board = Board.getInstance();
-        board.setup(attacker, defender);
-
-        while (true) {
-            Display.toBothln(board.toString());
-            displayHands(attacker, defender);
-            attacker.takeTurn();
-            board.declareControl();
-            attacker.draw();
-
-            Display.toBothln(board.toString());
-            displayHands(attacker, defender);
-            if (displayWinner(board)) {
-                break;
-            }
-            defender.takeTurn();
-            defender.draw();
-            board.declareControl();
-        }
-
+        Display.toBothln("GAME OVER");
+        Display.toBothln("THANKS FOR PLAYING", "END_PROGRAM");
         serverSocket.close();
         socket.close();
     }
 
-    private static String chooseRole() {
+    private static boolean runGame(BufferedReader clientIn, BufferedReader input, Role hostRole) throws IOException {
+        if (hostRole == Role.ATTACKER) {
+            attacker = new Attacker(Player.PlayerType.HOST, input);
+            defender = new Defender(Player.PlayerType.CLIENT, clientIn);
+            Display.toHostln("\nYou are the ATTACKER.");
+            Display.toClient("\nYou are the DEFENDER.");
+        } else {
+            attacker = new Attacker(Player.PlayerType.CLIENT, clientIn);
+            defender = new Defender(Player.PlayerType.HOST, input);
+            Display.toClient("\nYou are the ATTACKER.");
+            Display.toHostln("\nYou are the DEFENDER.");
+        }
+
+        Table table = Table.getInstance();
+        table.setup(attacker, defender);
+
+        while (true) {
+            Display.toBothln(table.toString());
+            displayHands();
+            if (displayWinner(table)) {
+                break;
+            }
+            attacker.takeTurn();
+            table.declareControl();
+            attacker.draw();
+
+            Display.toBothln(table.toString());
+            displayHands();
+            if (displayWinner(table)) {
+                break;
+            }
+            defender.takeTurn();
+            defender.draw();
+            table.declareControl();
+        }
+
+        return playAgain();
+    }
+
+    private static boolean playAgain() throws IOException {
         Scanner scan = new Scanner(System.in);
-        Display.toHost("Which role (a/d)? ");
-        Display.toClient("Host is choosing role");
+        Display.toHost("Rematch (y/n)? ");
+        clearHostInput();
+        String input = scan.nextLine();
+        if (input.equalsIgnoreCase("y")) {
+            return true;
+        } else if (input.equalsIgnoreCase("n")) {
+            return false;
+        } else {
+            Display.toHostln("Let's try that again.");
+            return playAgain();
+        }
+    }
+
+    private static Role chooseRole() throws IOException {
+        Scanner scan = new Scanner(System.in);
+        Display.toHost("Which role (attacker/defender/random)? ");
+        clearHostInput();
         String role = scan.nextLine();
-        if (role.equalsIgnoreCase("a")) {
-            return "a";
-        } else if (role.equalsIgnoreCase("d")) {
-            return "d";
+        if (role.equalsIgnoreCase("a") || role.equalsIgnoreCase("attacker")) {
+            return Role.ATTACKER;
+        } else if (role.equalsIgnoreCase("d") || role.equalsIgnoreCase("defender")) {
+            return Role.DEFENDER;
+        } else if (role.equalsIgnoreCase("random") || role.equalsIgnoreCase("r")) {
+            int i = (int)(2 * Math.random());
+            return i == 0 ? Role.ATTACKER : Role.DEFENDER;
         } else {
             Display.toHostln("Let's try that again.");
             return chooseRole();
+        }
+    }
+
+    private static Role chooseRole(Role prevHostRole) throws IOException {
+        Scanner scan = new Scanner(System.in);
+        Display.toHost("Which role (attacker/defender/random/swap)? ");
+        clearHostInput();
+        String role = scan.nextLine();
+        if (role.equalsIgnoreCase("a") || role.equalsIgnoreCase("attacker")) {
+            return Role.ATTACKER;
+        } else if (role.equalsIgnoreCase("d") || role.equalsIgnoreCase("defender")) {
+            return Role.DEFENDER;
+        } else if (role.equalsIgnoreCase("random") || role.equalsIgnoreCase("r")) {
+            int i = (int)(2 * Math.random());
+            return i == 0 ? Role.ATTACKER : Role.DEFENDER;
+        } else if (role.equalsIgnoreCase("swap") || role.equalsIgnoreCase("s")) {
+            return prevHostRole.other();
+        } else {
+            Display.toHostln("Let's try that again.");
+            return chooseRole(prevHostRole);
         }
     }
 
@@ -78,13 +132,14 @@ public class Host {
         return hostEmojiCheck() && clientEmojiCheck(clientIn);
     }
 
-    private static boolean hostEmojiCheck() {
+    private static boolean hostEmojiCheck() throws IOException {
         Scanner scan = new Scanner(System.in);
         Display.toClient("Checking host emojis");
         Display.toHostln("Here are the emojis used in the game:");
         Display.toHostln(Color.listOf(Color.ColorType.EMOJI));
         Display.toHost("Can you see them (y/n)? ");
-        String input = scan.nextLine();
+        clearHostInput();
+        String input = scan.nextLine().trim();
         if (input.equalsIgnoreCase("y")) {
             return true;
         } else if (input.equalsIgnoreCase("n")) {
@@ -100,7 +155,7 @@ public class Host {
         Display.toClient("Here are the emojis used in the game:");
         Display.toClient(Color.listOf(Color.ColorType.EMOJI));
         Display.toClient("Can you see them (y/n)? ", "GET_INPUT");
-        String str = input.readLine();
+        String str = input.readLine().trim();
         if (str.equalsIgnoreCase("y")) {
             return true;
         } else if (str.equalsIgnoreCase("n")) {
@@ -126,22 +181,38 @@ public class Host {
         return str.toString();
     }
 
-    private static boolean displayWinner(Board board) {
-        return switch(board.won()) {
+    private static boolean displayWinner(Table table) {
+        return switch(table.won()) {
             case Winner.ATTACKER -> {
-                Display.toBoth("\nAttacker wins\n", "GAME_OVER");
+                attacker.displayln("\nYOU WIN\n");
+                defender.displayln("\nYOU LOSE\n");
                 yield true;
             }
             case Winner.DEFENDER -> {
-                Display.toBoth("\nDefender wins\n", "GAME_OVER");
+                defender.displayln("\nYOU WIN\n");
+                attacker.displayln("\nYOU LOSE\n");
                 yield true;
             }
             default -> false;
         };
     }
 
-    public static void displayHands(Player attacker, Player defender) {
+    public static void displayHands() {
         attacker.displayHand();
         defender.displayHand();
+    }
+
+    private enum Role {
+        ATTACKER, DEFENDER;
+
+        public Role other() {
+            return this == ATTACKER ? DEFENDER : ATTACKER;
+        }
+    }
+
+    private static void clearHostInput() throws IOException {
+        while (System.in.available() > 0) {
+            System.in.read();
+        }
     }
 }

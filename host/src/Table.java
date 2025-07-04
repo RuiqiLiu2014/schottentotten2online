@@ -1,27 +1,25 @@
 import java.util.*;
-import java.io.*;
-import java.net.*;
 
-public class Board {
-    private static Board instance;
+public class Table {
+    private static Table instance;
     private final Wall[] board;
     private final Deck deck;
     private final Discard discard;
     private int cauldronCount;
 
-    private Board(Deck deck, Discard discard) { // pass in deck/discard instance
-        board = new Wall[Constants.numWalls];
-        for (int i = 0; i < Constants.numWalls; i++) {
-            board[i] = new Wall(Constants.wallLengths[i], Constants.damagedWallLengths[i], Constants.wallPatterns[i], Constants.damagedWallPatterns[i], i + 1);
+    private Table(Deck deck, Discard discard) { // pass in deck/discard instance
+        board = new Wall[Constants.NUM_WALLS];
+        for (int i = 0; i < Constants.NUM_WALLS; i++) {
+            board[i] = new Wall(Constants.WALL_LENGTHS[i], Constants.DAMAGED_WALL_LENGTHS[i], Constants.WALL_PATTERNS[i], Constants.DAMAGED_WALL_PATTERNS[i], i + 1);
         }
         this.deck = deck;
         this.discard = discard;
-        cauldronCount = Constants.numCauldrons;
+        cauldronCount = Constants.NUM_CAULDRONS;
     }
 
-    public static synchronized Board getInstance() {
+    public static synchronized Table getInstance() {
         if (instance == null) {
-            instance = new Board(Deck.getInstance(), Discard.getInstance());
+            instance = new Table(Deck.getInstance(), Discard.getInstance());
         }
         return instance;
     }
@@ -29,14 +27,14 @@ public class Board {
     public String toString() {
         StringBuilder str = new StringBuilder();
         str.append("\n");
-        str.append((Constants.cardSpace + " ").repeat(Constants.longestWall).substring(8));
-        str.append("ATTACKER").append(" ".repeat(Constants.leftWalls[0].length()));
-        str.append(" ".repeat(Constants.longestWall * 2)).append("DECK:");
+        str.append((Constants.CARD_SPACE + " ").repeat(Constants.LONGEST_WALL).substring(8));
+        str.append("ATTACKER").append(" ".repeat(board[0].getLeftSymbolLength()));
+        str.append(" ".repeat(Constants.LONGEST_WALL * 2)).append("DECK:");
         if (deck.size() < 10) {
             str.append("0");
         }
-        str.append(deck.size()).append(" ".repeat(Constants.longestWall * 2));
-        str.append(" ".repeat(Constants.rightWalls[0].length())).append("DEFENDER ");
+        str.append(deck.size()).append(" ".repeat(Constants.LONGEST_WALL * 2));
+        str.append(" ".repeat(board[0].getRightSymbolLength())).append("DEFENDER ");
         str.append(Constants.CAULDRON.repeat(cauldronCount));
         str.append("\n");
 
@@ -44,26 +42,34 @@ public class Board {
             str.append(wall).append("\n");
         }
 
-        str.append("-".repeat((Constants.cardSpace.length() + 1) * Constants.longestWall + Constants.leftWalls[0].length() + Constants.longestWall * 2));
+        str.append("-".repeat((Constants.CARD_SPACE.length() + 1) * Constants.LONGEST_WALL + board[0].getLeftSymbolLength() + Constants.LONGEST_WALL * 2));
         str.append("DISCARD");
-        str.append("-".repeat((Constants.cardSpace.length() + 1) * Constants.longestWall + Constants.rightWalls[0].length() + Constants.longestWall * 2));
+        str.append("-".repeat((Constants.CARD_SPACE.length() + 1) * Constants.LONGEST_WALL + board[0].getRightSymbolLength() + Constants.LONGEST_WALL * 2));
         str.append("\n");
         if (discard.isEmpty()) {
             str.append("\n");
         } else {
             str.append(discard);
         }
-        str.append("-".repeat(2 * (Constants.cardSpace.length() + 1) * Constants.longestWall));
-        str.append("-".repeat(Constants.leftWalls[0].length() + Constants.rightWalls[0].length() + Constants.longestWall * 4));
+        str.append("-".repeat(2 * (Constants.CARD_SPACE.length() + 1) * Constants.LONGEST_WALL));
+        str.append("-".repeat(board[0].getLeftSymbolLength() + board[0].getRightSymbolLength() + Constants.LONGEST_WALL * 4));
         str.append("-------");
         return str.toString();
     }
 
     public void setup(Player attacker, Player defender) {
-        deck.shuffle();
-        for (int i = 0; i < Constants.handSize; i++) {
+        clear();
+        deck.reset();
+        discard.clear();
+        for (int i = 0; i < Constants.HAND_SIZE; i++) {
             attacker.draw();
             defender.draw();
+        }
+    }
+
+    private void clear() {
+        for (Wall wall : board) {
+            wall.reset();
         }
     }
 
@@ -71,13 +77,15 @@ public class Board {
         return board[wall - 1].playCard(card, isAttacker);
     }
 
-    public void retreat(int wall) {
+    public boolean retreat(int wall) {
         List<Card> cards = board[wall - 1].retreat();
         if (!cards.isEmpty()) {
             discard.addAll(cards);
             Display.toBothln(toString());
-            Display.toBothln("Attacker retreated from wall " + wall + ". What a coward.");
+            Display.toBothln("Attacker retreated from wall " + wall + ".");
+            return true;
         }
+        return false;
     }
 
     public boolean cauldron(int wall) {
@@ -86,7 +94,7 @@ public class Board {
             discard.add(card);
             cauldronCount--;
             Display.toBothln(toString());
-            String str = "Defender used cauldron on wall " + (wall - 1) + ". " + cauldronCount + " cauldron";
+            String str = "Defender used cauldron on wall " + wall + ".\n" + cauldronCount + " cauldron";
             if (cauldronCount != 1) {
                 str += "s";
             }
@@ -99,7 +107,7 @@ public class Board {
 
     public void declareControl() {
         List<Card> remainingCards = new ArrayList<>();
-        for (Card card : Constants.allCards) {
+        for (Card card : Constants.ALL_CARDS) {
             if (!discard.contains(card) && !onBoard(card)) {
                 remainingCards.add(card);
             }

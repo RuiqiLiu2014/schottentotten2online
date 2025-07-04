@@ -1,6 +1,4 @@
-import java.util.*;
 import java.io.*;
-import java.net.*;
 
 public class Defender extends Player {
     private boolean usedCauldron;
@@ -10,58 +8,56 @@ public class Defender extends Player {
         usedCauldron = false;
     }
 
-    public boolean playCard() throws IOException {
+    public Played playCard() throws IOException {
         Card card = chooseCard();
         if (card == null) {
-            return false;
+            return Played.FAILED;
+        } else if (card.isAction()) {
+            return Played.USED_ACTION;
         }
 
         int wall = chooseWall();
         if (wall == 0) {
-            return false;
+            return Played.FAILED;
         }
 
-        if (Board.getInstance().playCard(card, wall, false) == Played.SUCCEEDED) {
+        Played played = Table.getInstance().playCard(card, wall, false);
+
+        if (played == Played.SUCCEEDED) {
             hand.remove(card);
-            return true;
+            return Played.SUCCEEDED;
+        } else if (played == Played.NO_SPACE) {
+            displayln("No more space");
         }
-        return false;
+        return Played.FAILED;
     }
 
     private Card chooseCard() throws IOException {
         clearInput();
-        toOpponent("Opponent is thinking...");
-        if (Board.getInstance().getCauldronCount() > 0 && !usedCauldron) {
+        if (Table.getInstance().getCauldronCount() > 0 && !usedCauldron) {
             display("Which card (c for cauldron)? ", "GET_INPUT");
         } else {
             display("Which card? ", "GET_INPUT");
         }
         String c = input.readLine();
         if (c.equalsIgnoreCase("c") && !usedCauldron) {
-            cauldron();
+            if (cauldron()) {
+                return Card.ACTION;
+            }
             return null;
         } else if (c.equalsIgnoreCase("c")) {
-            displayln("you already tried that this turn");
-            displayln("you cheater");
-            toOpponent("your opponent tried to cauldron again");
-            toOpponent("what a cheater");
+            displayln("You already used a cauldron this turn");
             return null;
         }
 
         if (!Card.isValid(c)) {
-            displayln("invalid move");
-            displayln("your opponent smacks you");
-            toOpponent("your opponent attempted an invalid move");
-            toOpponent("you smack them");
+            displayln("Invalid card");
             return null;
         }
 
         Card card = new Card(c);
         if (!hand.contains(card)) {
-            displayln("you don't have that card");
-            displayln("you clearly need glasses");
-            toOpponent("your opponent tries to play a card they don't have");
-            toOpponent("take them to get glasses after the game");
+            displayln("You don't have that card");
             return null;
         }
 
@@ -69,25 +65,20 @@ public class Defender extends Player {
         return card;
     }
 
-    private void cauldron() throws IOException {
-        if (Board.getInstance().getCauldronCount() > 0) {
+    private boolean cauldron() throws IOException {
+        if (Table.getInstance().getCauldronCount() > 0) {
             int wall = chooseWall();
             if (wall != 0) {
-                if (Board.getInstance().cauldron(wall)) {
+                if (Table.getInstance().cauldron(wall)) {
                     usedCauldron = true;
+                    return true;
                 } else {
-                    displayln("nothing to cauldron");
-                    displayln("thanks for watering the plants with hot oil i guess");
-                    displayln("jk have your cauldron back");
-                    toOpponent("your opponent wastes a cauldron on nothing");
-                    toOpponent("jk they can have it back");
+                    displayln("Nothing to cauldron");
                 }
             }
         } else {
-            displayln("you have no more cauldrons");
-            displayln("cry about it");
-            toOpponent("your opponent has no cauldrons");
-            toOpponent("tell them to cry about it");
+            displayln("You have no more cauldrons");
         }
+        return false;
     }
 }

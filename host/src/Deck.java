@@ -1,14 +1,12 @@
 import java.util.*;
-import java.io.*;
-import java.net.*;
 
 public class Deck {
     private static Deck instance;
-    private final Stack<Card> deck;
+    private Stack<Card> deck;
 
     private Deck() {
         deck = new Stack<>();
-        deck.addAll(Constants.allCards);
+        deck.addAll(Constants.ALL_CARDS);
     }
 
     public static synchronized Deck getInstance() {
@@ -35,5 +33,11 @@ public class Deck {
             return null;
         }
         return deck.pop();
+    }
+
+    public void reset() {
+        deck = new Stack<>();
+        deck.addAll(Constants.ALL_CARDS);
+        shuffle();
     }
 }

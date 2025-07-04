@@ -17,11 +17,15 @@ public abstract class Player {
     }
 
     public void takeTurn() throws IOException {
-        boolean played = playCard();
-        while (!played) {
-            displayln("you are bad");
-            toOpponent("your opponent is being bad");
-            displayHand();
+        toOpponent("Opponent is thinking...");
+        Played played = playCard();
+        while (played != Played.SUCCEEDED) {
+            if (played == Played.USED_ACTION) {
+                toOpponent("Opponent is thinking...");
+                Host.displayHands();
+            } else {
+                displayHand();
+            }
             played = playCard();
         }
     }
@@ -31,19 +35,15 @@ public abstract class Player {
         display("Which wall (0 to cancel)? ", "GET_INPUT");
         String w = input.readLine();
         if (!isInteger(w)) {
-            displayln("that's not a wall");
-            displayln("watch where you send your troops");
+            displayln("Invalid wall");
             return 0;
         }
 
         int wall = Integer.parseInt(w);
         if (wall == 0) {
-            displayln("you have commitment issues");
-            toOpponent("your opponent has commitment issues");
             return 0;
-        } else if (wall < 0 || wall > Constants.numWalls) {
-            displayln("wall out of range");
-            displayln("bros sending troops to narnia");
+        } else if (wall < 0 || wall > Constants.NUM_WALLS) {
+            displayln("Invalid wall");
             return 0;
         }
 
@@ -69,7 +69,7 @@ public abstract class Player {
         }
     }
 
-    public abstract boolean playCard() throws IOException;
+    public abstract Played playCard() throws IOException;
 
     public void displayHand() {
         StringBuilder h = new StringBuilder();
