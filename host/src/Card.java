@@ -59,8 +59,11 @@ public class Card implements Comparable<Card> {
             return false;
         }
 
-        int value = Integer.parseInt(name.substring(name.length() - 2));
-        return value >= 0 && value <= 11;
+        try {
+            return Constants.VALUES.contains(Integer.parseInt(name.substring(name.length() - 2)));
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     public boolean isAction() {

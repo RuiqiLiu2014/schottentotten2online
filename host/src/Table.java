@@ -129,7 +129,7 @@ public class Table {
         return false;
     }
 
-    public Winner won() {
+    public Winner won(boolean checkDeck) {
         int numDamaged = 0;
         for (Wall wall : board) {
             if (wall.isBroken()) {
@@ -141,7 +141,7 @@ public class Table {
         if (numDamaged >= 4) {
             return Winner.ATTACKER;
         }
-        if (deck.isEmpty() || defenderSideFull()) {
+        if (checkDeck && (deck.isEmpty() || defenderSideFull())) {
             return Winner.DEFENDER;
         }
 

@@ -16,7 +16,7 @@ public class Host {
         BufferedReader clientIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         PrintWriter clientOut = new PrintWriter(socket.getOutputStream(), true);
         BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
-        Display.setClientOut(clientOut); // consider 2 display objects
+        Display.setClientOut(clientOut);
 
         useEmojis = emojiCheck(clientIn);
         Display.toBothln(instructions());
@@ -55,7 +55,7 @@ public class Host {
         while (true) {
             Display.toBothln(table.toString());
             displayHands();
-            if (displayWinner(table)) {
+            if (displayWinner(table, false)) {
                 break;
             }
             attacker.takeTurn();
@@ -64,7 +64,7 @@ public class Host {
 
             Display.toBothln(table.toString());
             displayHands();
-            if (displayWinner(table)) {
+            if (displayWinner(table, true)) {
                 break;
             }
             defender.takeTurn();
@@ -94,12 +94,12 @@ public class Host {
         Scanner scan = new Scanner(System.in);
         Display.toHost("Which role (attacker/defender/random)? ");
         clearHostInput();
-        String role = scan.nextLine();
-        if (role.equalsIgnoreCase("a") || role.equalsIgnoreCase("attacker")) {
+        String role = scan.nextLine().trim().toLowerCase();
+        if ("attacker".startsWith(role)) {
             return Role.ATTACKER;
-        } else if (role.equalsIgnoreCase("d") || role.equalsIgnoreCase("defender")) {
+        } else if ("defender".startsWith(role)) {
             return Role.DEFENDER;
-        } else if (role.equalsIgnoreCase("random") || role.equalsIgnoreCase("r")) {
+        } else if ("random".startsWith(role)) {
             int i = (int)(2 * Math.random());
             return i == 0 ? Role.ATTACKER : Role.DEFENDER;
         } else {
@@ -112,15 +112,15 @@ public class Host {
         Scanner scan = new Scanner(System.in);
         Display.toHost("Which role (attacker/defender/random/swap)? ");
         clearHostInput();
-        String role = scan.nextLine();
-        if (role.equalsIgnoreCase("a") || role.equalsIgnoreCase("attacker")) {
+        String role = scan.nextLine().trim().toLowerCase();
+        if ("attacker".startsWith(role)) {
             return Role.ATTACKER;
-        } else if (role.equalsIgnoreCase("d") || role.equalsIgnoreCase("defender")) {
+        } else if ("defender".startsWith(role)) {
             return Role.DEFENDER;
-        } else if (role.equalsIgnoreCase("random") || role.equalsIgnoreCase("r")) {
+        } else if ("random".startsWith(role)) {
             int i = (int)(2 * Math.random());
             return i == 0 ? Role.ATTACKER : Role.DEFENDER;
-        } else if (role.equalsIgnoreCase("swap") || role.equalsIgnoreCase("s")) {
+        } else if ("swap".startsWith(role)) {
             return prevHostRole.other();
         } else {
             Display.toHostln("Let's try that again.");
@@ -181,8 +181,8 @@ public class Host {
         return str.toString();
     }
 
-    private static boolean displayWinner(Table table) {
-        return switch(table.won()) {
+    private static boolean displayWinner(Table table, boolean checkDeck) {
+        return switch(table.won(checkDeck)) {
             case Winner.ATTACKER -> {
                 attacker.displayln("\nYOU WIN\n");
                 defender.displayln("\nYOU LOSE\n");

@@ -57,11 +57,11 @@ public class Attacker extends Player {
     private boolean retreat() throws IOException {
         int wall = chooseWall();
         if (wall != 0) {
-            boolean retreated = Table.getInstance().retreat(wall);
-            if (!retreated) {
+            if (Table.getInstance().retreat(wall)) {
+                return true;
+            } else {
                 displayln("Nothing to retreat");
             }
-            return retreated;
         }
         return false;
     }
