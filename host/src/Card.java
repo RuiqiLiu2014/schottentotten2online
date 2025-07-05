@@ -3,8 +3,9 @@ import java.util.*;
 public class Card implements Comparable<Card> {
     private final int value;
     private final Color color;
+    private static final int ACTION_VALUE = -1;
 
-    public static final Card ACTION = new Card(null, -1);
+    public static final Card ACTION = new Card(null, ACTION_VALUE);
 
     public Card(Color color, int value) {
         this.value = value;
@@ -39,7 +40,7 @@ public class Card implements Comparable<Card> {
         if (this == o) {
             return true;
         } else if (o instanceof Card) {
-            return compareTo((Card)o) == 0;
+            return this.color == ((Card) o).color && this.value == ((Card) o).value;
         } else {
             return false;
         }
@@ -67,6 +68,6 @@ public class Card implements Comparable<Card> {
     }
 
     public boolean isAction() {
-        return value == -1;
+        return value == ACTION_VALUE;
     }
 }

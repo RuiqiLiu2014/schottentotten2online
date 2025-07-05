@@ -22,7 +22,7 @@ public enum Color {
     }
 
     public static Color convert(String str) {
-        str = str.toLowerCase();
+        str = str.trim().toLowerCase();
         for (Color color : values()) {
             if (str.equals(color.color) || str.equals(color.emoji) || str.equals(color.name) || str.equals(color.fruit)) {
                 return color;

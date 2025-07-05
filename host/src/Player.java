@@ -4,13 +4,13 @@ import java.io.*;
 public abstract class Player {
     protected Set<Card> hand;
     protected PlayerType playerType;
-    protected BufferedReader input;
+    protected Input input;
 
     public enum PlayerType {
         HOST, CLIENT
     }
 
-    public Player(PlayerType type, BufferedReader input) {
+    public Player(PlayerType type, Input input) {
         hand = new TreeSet<>();
         this.playerType = type;
         this.input = input;
@@ -32,10 +32,10 @@ public abstract class Player {
 
     protected int chooseWall() throws IOException {
         clearInput();
-        display("Which wall (0 to cancel)? ", "GET_INPUT");
+        display(Prompts.WHICH_WALL, "GET_INPUT");
         String w = input.readLine();
         if (!isInteger(w)) {
-            displayln("Invalid wall");
+            displayln(Prompts.INVALID_WALL);
             return 0;
         }
 
@@ -43,7 +43,7 @@ public abstract class Player {
         if (wall == 0) {
             return 0;
         } else if (wall < 0 || wall > Constants.NUM_WALLS) {
-            displayln("Invalid wall");
+            displayln(Prompts.INVALID_WALL);
             return 0;
         }
 
@@ -119,5 +119,14 @@ public abstract class Player {
         while (input.ready()) {
             input.readLine();
         }
+    }
+
+    protected static class Prompts {
+        static final String INVALID_CARD = "Invalid card";
+        static final String NO_CARD = "You don't have that card";
+        static final String NO_SPACE = "No more space";
+        static final String WHICH_WALL = "Which wall (0 to cancel)? ";
+        static final String INVALID_WALL = "Invalid wall";
+
     }
 }

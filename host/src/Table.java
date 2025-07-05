@@ -59,6 +59,7 @@ public class Table {
 
     public void setup(Player attacker, Player defender) {
         clear();
+        cauldronCount = Constants.NUM_CAULDRONS;
         deck.reset();
         discard.clear();
         for (int i = 0; i < Constants.HAND_SIZE; i++) {

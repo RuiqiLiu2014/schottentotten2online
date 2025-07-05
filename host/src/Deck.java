@@ -2,10 +2,10 @@ import java.util.*;
 
 public class Deck {
     private static Deck instance;
-    private Stack<Card> deck;
+    private final Deque<Card> deck;
 
     private Deck() {
-        deck = new Stack<>();
+        deck = new ArrayDeque<>();
         deck.addAll(Constants.ALL_CARDS);
     }
 
@@ -16,27 +16,30 @@ public class Deck {
         return instance;
     }
 
-    public int size() {
+    public synchronized int size() {
         return deck.size();
     }
 
-    public boolean isEmpty() {
+    public synchronized boolean isEmpty() {
         return deck.isEmpty();
     }
 
-    public void shuffle() {
-        Collections.shuffle(deck);
+    public synchronized void shuffle() {
+        List<Card> cards = new ArrayList<>(deck);
+        Collections.shuffle(cards);
+        deck.clear();
+        deck.addAll(cards);
     }
 
-    public Card pop() {
+    public synchronized Card pop() {
         if (deck.isEmpty()) {
             return null;
         }
         return deck.pop();
     }
 
-    public void reset() {
-        deck = new Stack<>();
+    public synchronized void reset() {
+        deck.clear();
         deck.addAll(Constants.ALL_CARDS);
         shuffle();
     }

@@ -3,7 +3,7 @@ import java.io.*;
 public class Defender extends Player {
     private boolean usedCauldron;
 
-    public Defender(PlayerType type, BufferedReader input) {
+    public Defender(PlayerType type, Input input) {
         super(type, input);
         usedCauldron = false;
     }
@@ -27,7 +27,7 @@ public class Defender extends Player {
             hand.remove(card);
             return Played.SUCCEEDED;
         } else if (played == Played.NO_SPACE) {
-            displayln("No more space");
+            displayln(Prompts.NO_SPACE);
         }
         return Played.FAILED;
     }
@@ -51,13 +51,13 @@ public class Defender extends Player {
         }
 
         if (!Card.isValid(c)) {
-            displayln("Invalid card");
+            displayln(Prompts.INVALID_CARD);
             return null;
         }
 
         Card card = new Card(c);
         if (!hand.contains(card)) {
-            displayln("You don't have that card");
+            displayln(Prompts.NO_CARD);
             return null;
         }
 

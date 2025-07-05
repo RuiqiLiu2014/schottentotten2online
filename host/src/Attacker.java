@@ -1,7 +1,7 @@
 import java.io.*;
 
 public class Attacker extends Player {
-    public Attacker(PlayerType type, BufferedReader input) {
+    public Attacker(PlayerType type, Input input) {
         super(type, input);
     }
 
@@ -24,7 +24,7 @@ public class Attacker extends Player {
             hand.remove(card);
             return Played.SUCCEEDED;
         } else if (played == Played.NO_SPACE) {
-            displayln("No more space");
+            displayln(Prompts.NO_SPACE);
         }
         return Played.FAILED;
     }
@@ -41,13 +41,13 @@ public class Attacker extends Player {
         }
 
         if (!Card.isValid(c)) {
-            displayln("Invalid card");
+            displayln(Prompts.INVALID_CARD);
             return null;
         }
 
         Card card = new Card(c);
         if (!hand.contains(card)) {
-            displayln("You don't have that card");
+            displayln(Prompts.NO_CARD);
             return null;
         }
 

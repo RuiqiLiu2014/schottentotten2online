@@ -17,39 +17,37 @@ public class Discard {
         return instance;
     }
 
-    public void add(Card card) {
+    public synchronized void add(Card card) {
         discard.add(card);
     }
 
-    public void addAll(Collection<Card> cards) {
+    public synchronized void addAll(Collection<Card> cards) {
         discard.addAll(cards);
     }
 
-    public boolean contains(Card card) {
+    public synchronized boolean contains(Card card) {
         return discard.contains(card);
     }
 
-    public String toString() {
+    public synchronized String toString() {
         StringBuilder str = new StringBuilder();
-        List<Card> list = List.copyOf(discard);
-        for (int i = 0; i < list.size() - 1; i++) {
-            str.append(list.get(i).toString()).append(" ");
-            if (!list.get(i).getColor().equals(list.get(i + 1).getColor())) {
+        Card previous = null;
+        for (Card card : discard) {
+            str.append(card).append(" ");
+            if (previous != null && !(previous.getColor() == card.getColor())) {
                 str.append("\n");
             }
-        }
-        if (!list.isEmpty()) {
-            str.append(list.getLast());
+            previous = card;
         }
         str.append("\n");
         return str.toString();
     }
 
-    public boolean isEmpty() {
+    public synchronized boolean isEmpty() {
         return discard.isEmpty();
     }
 
-    public void clear() {
+    public synchronized void clear() {
         discard.clear();
     }
 }

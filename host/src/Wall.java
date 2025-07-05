@@ -15,6 +15,8 @@ public class Wall {
     private boolean attackerFinishedFirst;
     private final int wallNum;
 
+    private static final int MULTIPLIER = 100;
+
     private enum Status {
         BROKEN("  ", "  "),
         DAMAGED("| ", " |"),
@@ -220,7 +222,7 @@ public class Wall {
                 }
             }
         }
-        return type.getStrength() * 100 + sum;
+        return type.getStrength() * MULTIPLIER + sum;
     }
 
     private FormationType getFormationType(List<Card> formation) {

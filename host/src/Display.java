@@ -22,7 +22,11 @@ public class Display {
     }
 
     public static void toClient(String msg, String prefix) {
-        clientOut.println(prefix + msg.replace("\n", "\\n"));
+        if (!prefix.isEmpty()) {
+            clientOut.println(prefix + msg.replace("\n", "\\n"));
+        } else {
+            clientOut.println(msg.replace("\n", "\\n"));
+        }
     }
 
     public static void toBoth(String msg) {

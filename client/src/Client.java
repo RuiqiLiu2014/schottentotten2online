@@ -4,7 +4,7 @@ import java.net.*;
 
 public class Client {
     public static void main(String[] args) throws IOException {
-        Socket socket = new Socket(args[0], Integer.parseInt(args[1])); // change
+        Socket socket = new Socket(args[0], Integer.parseInt(args[1]));
         System.out.println("connected\n");
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         PrintWriter out = new PrintWriter(socket.getOutputStream(), true);

@@ -7,44 +7,52 @@ public class Host {
     private static Player attacker;
     private static Player defender;
 
-    public static void main(String[] args) throws IOException {
-        ServerSocket serverSocket = new ServerSocket(Integer.parseInt(args[0]));
-        Display.toHostln("waiting for client to connect");
-        Socket socket = serverSocket.accept();
-        Display.toHostln("connected\n");
+    public static void main(String[] args) {
+        try (ServerSocket serverSocket = new ServerSocket(Integer.parseInt(args[0]))) {
+            Display.toHostln("Waiting for client to connect...");
+            try (Socket socket = serverSocket.accept()) {
+                Display.toHostln("Connected!\n");
 
-        BufferedReader clientIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        PrintWriter clientOut = new PrintWriter(socket.getOutputStream(), true);
-        BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
-        Display.setClientOut(clientOut);
+                BufferedReader cIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                PrintWriter clientOut = new PrintWriter(socket.getOutputStream(), true);
+                BufferedReader hIn = new BufferedReader(new InputStreamReader(System.in));
+                Display.setClientOut(clientOut);
 
-        useEmojis = emojiCheck(clientIn);
-        Display.toBothln(instructions());
+                Input clientIn = new Input(cIn);
+                Input hostIn = new Input(hIn);
 
-        Display.toClient("Host is choosing role");
-        Role hostRole = chooseRole();
-        boolean playAgain = runGame(clientIn, input, hostRole);
-        while (playAgain) {
-            Display.toClient("Host is choosing role");
-            hostRole = chooseRole(hostRole);
-            playAgain = runGame(clientIn, input, hostRole);
+                useEmojis = emojiCheck(hostIn, clientIn);
+                Display.toBothln(instructions());
+
+                Display.toClient("Host is choosing role");
+                Role hostRole = chooseRole(hostIn);
+                boolean playAgain = runGame(clientIn, hostIn, hostRole);
+                while (playAgain) {
+                    Display.toClient("Host is choosing role");
+                    hostRole = chooseRole(hostRole, hostIn);
+                    playAgain = runGame(clientIn, hostIn, hostRole);
+                }
+
+                Display.toBothln(Prompts.GAME_OVER, "END_PROGRAM");
+            }
+        } catch (NumberFormatException e) {
+            System.err.println("Invalid port number.");
+        } catch (IOException e) {
+            System.err.println("Error in server connection: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("An unexpected error occurred: " + e.getMessage());
         }
-
-        Display.toBothln("GAME OVER");
-        Display.toBothln("THANKS FOR PLAYING", "END_PROGRAM");
-        serverSocket.close();
-        socket.close();
     }
 
-    private static boolean runGame(BufferedReader clientIn, BufferedReader input, Role hostRole) throws IOException {
+    private static boolean runGame(Input clientIn, Input hostIn, Role hostRole) throws IOException {
         if (hostRole == Role.ATTACKER) {
-            attacker = new Attacker(Player.PlayerType.HOST, input);
+            attacker = new Attacker(Player.PlayerType.HOST, hostIn);
             defender = new Defender(Player.PlayerType.CLIENT, clientIn);
             Display.toHostln("\nYou are the ATTACKER.");
             Display.toClient("\nYou are the DEFENDER.");
         } else {
             attacker = new Attacker(Player.PlayerType.CLIENT, clientIn);
-            defender = new Defender(Player.PlayerType.HOST, input);
+            defender = new Defender(Player.PlayerType.HOST, hostIn);
             Display.toClient("\nYou are the ATTACKER.");
             Display.toHostln("\nYou are the DEFENDER.");
         }
@@ -72,97 +80,94 @@ public class Host {
             table.declareControl();
         }
 
-        return playAgain();
+        return playAgain(hostIn);
     }
 
-    private static boolean playAgain() throws IOException {
-        Scanner scan = new Scanner(System.in);
-        Display.toHost("Rematch (y/n)? ");
-        clearHostInput();
-        String input = scan.nextLine();
-        if (input.equalsIgnoreCase("y")) {
-            return true;
-        } else if (input.equalsIgnoreCase("n")) {
-            return false;
-        } else {
-            Display.toHostln("Let's try that again.");
-            return playAgain();
+    private static boolean playAgain(Input hostIn) throws IOException {
+        while (true) {
+            Display.toHost(Prompts.REMATCH);
+            hostIn.clear();
+            String str = hostIn.readLine().trim();
+            if (str.equalsIgnoreCase("y")) {
+                return true;
+            } else if (str.equalsIgnoreCase("n")) {
+                return false;
+            } else {
+                Display.toHostln(Prompts.TRY_AGAIN);
+            }
         }
     }
 
-    private static Role chooseRole() throws IOException {
-        Scanner scan = new Scanner(System.in);
-        Display.toHost("Which role (attacker/defender/random)? ");
-        clearHostInput();
-        String role = scan.nextLine().trim().toLowerCase();
-        if ("attacker".startsWith(role)) {
-            return Role.ATTACKER;
-        } else if ("defender".startsWith(role)) {
-            return Role.DEFENDER;
-        } else if ("random".startsWith(role)) {
-            int i = (int)(2 * Math.random());
-            return i == 0 ? Role.ATTACKER : Role.DEFENDER;
-        } else {
-            Display.toHostln("Let's try that again.");
-            return chooseRole();
+    private static Role chooseRole(Input hostIn) throws IOException {
+        while (true) {
+            Display.toHost("Which role (attacker/defender/random)? ");
+            hostIn.clear();
+            String role = hostIn.readLine().trim().toLowerCase();
+            if ("attacker".startsWith(role)) {
+                return Role.ATTACKER;
+            } else if ("defender".startsWith(role)) {
+                return Role.DEFENDER;
+            } else if ("random".startsWith(role)) {
+                int i = (int)(2 * Math.random());
+                return i == 0 ? Role.ATTACKER : Role.DEFENDER;
+            } else {
+                Display.toHostln(Prompts.TRY_AGAIN);
+            }
         }
     }
 
-    private static Role chooseRole(Role prevHostRole) throws IOException {
-        Scanner scan = new Scanner(System.in);
-        Display.toHost("Which role (attacker/defender/random/swap)? ");
-        clearHostInput();
-        String role = scan.nextLine().trim().toLowerCase();
-        if ("attacker".startsWith(role)) {
-            return Role.ATTACKER;
-        } else if ("defender".startsWith(role)) {
-            return Role.DEFENDER;
-        } else if ("random".startsWith(role)) {
-            int i = (int)(2 * Math.random());
-            return i == 0 ? Role.ATTACKER : Role.DEFENDER;
-        } else if ("swap".startsWith(role)) {
-            return prevHostRole.other();
-        } else {
-            Display.toHostln("Let's try that again.");
-            return chooseRole(prevHostRole);
+    private static Role chooseRole(Role prevHostRole, Input hostIn) throws IOException {
+        while (true) {
+            Display.toHost("Which role (attacker/defender/random/swap)? ");
+            hostIn.clear();
+            String role = hostIn.readLine().trim().toLowerCase();
+            if ("attacker".startsWith(role)) {
+                return Role.ATTACKER;
+            } else if ("defender".startsWith(role)) {
+                return Role.DEFENDER;
+            } else if ("random".startsWith(role)) {
+                int i = (int) (2 * Math.random());
+                return i == 0 ? Role.ATTACKER : Role.DEFENDER;
+            } else if ("swap".startsWith(role)) {
+                return prevHostRole.other();
+            } else {
+                Display.toHostln(Prompts.TRY_AGAIN);
+            }
         }
     }
 
-    private static boolean emojiCheck(BufferedReader clientIn) throws IOException {
-        return hostEmojiCheck() && clientEmojiCheck(clientIn);
+    private static boolean emojiCheck(Input hostIn, Input clientIn) throws IOException {
+        return hostEmojiCheck(hostIn) && clientEmojiCheck(clientIn);
     }
 
-    private static boolean hostEmojiCheck() throws IOException {
-        Scanner scan = new Scanner(System.in);
-        Display.toClient("Checking host emojis");
-        Display.toHostln("Here are the emojis used in the game:");
-        Display.toHostln(Color.listOf(Color.ColorType.EMOJI));
-        Display.toHost("Can you see them (y/n)? ");
-        clearHostInput();
-        String input = scan.nextLine().trim();
-        if (input.equalsIgnoreCase("y")) {
-            return true;
-        } else if (input.equalsIgnoreCase("n")) {
-            return false;
-        } else {
-            Display.toHostln("Let's try that again.");
-            return hostEmojiCheck();
+    private static boolean hostEmojiCheck(Input hostIn) throws IOException {
+        while (true) {
+            Display.toClient("Checking host emojis");
+            Display.toHost(Prompts.EMOJI_CHECK);
+            hostIn.clear();
+            String str = hostIn.readLine().trim();
+            if (str.equalsIgnoreCase("y")) {
+                return true;
+            } else if (str.equalsIgnoreCase("n")) {
+                return false;
+            } else {
+                Display.toHostln(Prompts.TRY_AGAIN);
+            }
         }
     }
 
-    private static boolean clientEmojiCheck(BufferedReader input) throws IOException {
-        Display.toHostln("Checking client emojis");
-        Display.toClient("Here are the emojis used in the game:");
-        Display.toClient(Color.listOf(Color.ColorType.EMOJI));
-        Display.toClient("Can you see them (y/n)? ", "GET_INPUT");
-        String str = input.readLine().trim();
-        if (str.equalsIgnoreCase("y")) {
-            return true;
-        } else if (str.equalsIgnoreCase("n")) {
-            return false;
-        } else {
-            Display.toClient("Let's try that again.");
-            return clientEmojiCheck(input);
+    private static boolean clientEmojiCheck(Input clientIn) throws IOException {
+        while (true) {
+            Display.toHostln("Checking client emojis");
+            Display.toClient(Prompts.EMOJI_CHECK, "GET_INPUT");
+            String str = clientIn.readLine().trim();
+            if (str.equalsIgnoreCase("y")) {
+                return true;
+            } else if (str.equalsIgnoreCase("n")) {
+                return false;
+            } else {
+                Display.toClient(Prompts.TRY_AGAIN);
+            }
         }
     }
 
@@ -184,13 +189,13 @@ public class Host {
     private static boolean displayWinner(Table table, boolean checkDeck) {
         return switch(table.won(checkDeck)) {
             case Winner.ATTACKER -> {
-                attacker.displayln("\nYOU WIN\n");
-                defender.displayln("\nYOU LOSE\n");
+                attacker.displayln(Prompts.WIN);
+                defender.displayln(Prompts.LOSE);
                 yield true;
             }
             case Winner.DEFENDER -> {
-                defender.displayln("\nYOU WIN\n");
-                attacker.displayln("\nYOU LOSE\n");
+                defender.displayln(Prompts.WIN);
+                attacker.displayln(Prompts.LOSE);
                 yield true;
             }
             default -> false;
@@ -210,9 +215,14 @@ public class Host {
         }
     }
 
-    private static void clearHostInput() throws IOException {
-        while (System.in.available() > 0) {
-            System.in.read();
-        }
+    private static class Prompts {
+        static final String REMATCH = "Rematch (y/n)? ";
+        static final String TRY_AGAIN = "Let's try that again.";
+        static final String EMOJI_CHECK = "Here are the emojis used in the game:\n" +
+                Color.listOf(Color.ColorType.EMOJI) + ", " + Constants.CAULDRON +
+                "\nCan you see them (y/n)? ";
+        static final String GAME_OVER = "GAME OVER\nTHANKS FOR PLAYING";
+        static final String WIN = "\nYOU WIN\n";
+        static final String LOSE = "\nYOU LOSE\n";
     }
 }
