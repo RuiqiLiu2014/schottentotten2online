@@ -183,6 +183,7 @@ public class Host {
             str.append("\nSuits: ").append(Color.listOf(Color.ColorType.FRUIT));
         }
         str.append("\nSingle digit numbers must have a 0 in front of them.\n");
+        str.append("\nType \"quit\" at any time to exit the game.\n");
         return str.toString();
     }
 
