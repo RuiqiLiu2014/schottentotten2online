@@ -1,7 +1,7 @@
 import java.util.*;
 
 public class Constants {
-    public static final List<Integer> VALUES = List.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11); // make enum
+    public static final List<Integer> VALUES = List.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11);
 
     public static final int HAND_SIZE = 6;
     public static final int NUM_CAULDRONS = 3;
